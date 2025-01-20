@@ -7,7 +7,7 @@ export const db = createConnection({
   host: process.env.HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PSW,
-  database: 'chatbot_db',
+  database: process.env.DB_DATABASE,
 });
 
 db.connect((err) => {
