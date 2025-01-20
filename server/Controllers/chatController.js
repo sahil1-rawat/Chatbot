@@ -1,49 +1,47 @@
 import { db } from '../DB/connection.js';
 import { AllMessages } from '../utils/messages.js';
 
-export const sendMessages = (req, res) => {
+export const sendMessages = async (req, res) => {
   const { sender, message } = req.body;
 
-  db.query(
-    'INSERT INTO messages (sender, message) VALUES (?, ?)',
-    [sender, message],
-    (err, result) => {
-      if (err) {
-        console.error('Error inserting message', err);
-        return res.status(500).send('Error saving message to database');
+  try {
+    // Insert user message into the database
+    await db.query('INSERT INTO messages (sender, message) VALUES ($1, $2)', [
+      sender,
+      message,
+    ]);
+
+    let botRes = 'I am not sure, I understand';
+
+    // Loop through the predefined responses
+    for (let i = 0; i < AllMessages.length; i++) {
+      if (message.toLowerCase().includes(AllMessages[i].sender)) {
+        botRes = AllMessages[i].bot;
+        break;
       }
-
-      let botRes = 'I am not sure, I understand';
-
-      // Loop through the predefined responses
-      for (let i = 0; i < AllMessages.length; i++) {
-        if (message.toLowerCase().includes(AllMessages[i].sender)) {
-          botRes = AllMessages[i].bot;
-          break;
-        }
-      }
-
-      db.query(
-        'INSERT INTO messages (sender, message) VALUES (?, ?)',
-        ['bot', botRes],
-        (err) => {
-          if (err) {
-            console.log('Error inserting bot message', err);
-            return res
-              .status(500)
-              .send('Error saving bot response to database');
-          }
-          res.status(200).json({ response: botRes });
-        }
-      );
     }
-  );
+
+    // Insert bot response into the database
+    await db.query('INSERT INTO messages (sender, message) VALUES ($1, $2)', [
+      'bot',
+      botRes,
+    ]);
+
+    res.status(200).json({ response: botRes });
+  } catch (err) {
+    console.error('Error interacting with database:', err);
+    res.status(500).send('Error processing messages');
+  }
 };
-export const getMessages = (req, res) => {
-  db.query(`SELECT * from messages ORDER BY created_at ASC`, (err, results) => {
-    if (err) {
-      return res.status(500).send('Error in retrieving message');
-    }
-    res.status(201).json(results);
-  });
+
+export const getMessages = async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM messages ORDER BY created_at ASC'
+    );
+    res.status(200).json(result.rows); // Use `rows` to access the data in PostgreSQL
+  } catch (err) {
+    console.error('Error retrieving messages:', err);
+    res.status(500).send('Error retrieving messages');
+  }
 };

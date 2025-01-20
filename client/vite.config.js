@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://chatbot-3fvb.onrender.com',
+        target: 'http://localhost:5000',
       },
     },
   },
