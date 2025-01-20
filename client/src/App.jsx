@@ -11,7 +11,7 @@ function App() {
   };
   useEffect(() => {
     const fetchMessages = async () => {
-      const response = await axios.get('/api/messages');
+      const response = await axios.get('https://chatbot-3fvb.onrender.com/api/messages');
       setFlow(response.data);
     };
     fetchMessages();
@@ -22,7 +22,7 @@ function App() {
 
     setFlow((prevFlow) => [...prevFlow, { sender: 'user', message: input }]);
 
-    const response = await axios.post('/api/messages', {
+    const response = await axios.post('https://chatbot-3fvb.onrender.com/api/messages', {
       sender: 'user',
       message: input,
     });
