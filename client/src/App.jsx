@@ -1,35 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Button } from '@/components/ui/button';
+import Chat from './components/ui/Chat';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [flow, setFlow] = useState([]);
+  const [input, setInput] = useState('');
+  const handleChange = (e) => {
+    setInput(e.target.value);
+  };
+  useEffect(() => {
+    const fetchMessages = async () => {
+      const response = await axios.get('/api/messages');
+      setFlow(response.data);
+    };
+    fetchMessages();
+  }, []);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    setFlow((prevFlow) => [...prevFlow, { sender: 'user', message: input }]);
+
+    const response = await axios.post('/api/messages', {
+      sender: 'user',
+      message: input,
+    });
+
+    setFlow((prevFlow) => [
+      ...prevFlow,
+      { sender: 'bot', message: response.data.response },
+    ]);
+
+    setInput('');
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Chat Click={handleSend} flow={flow} text={input} Change={handleChange} />
+  );
 }
 
-export default App
+export default App;
